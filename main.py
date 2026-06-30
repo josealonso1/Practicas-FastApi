@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from enum import Enum
 from typing import Optional
+from pydantic import BaseModel, Field, field_validator
 
 app = FastAPI()
 
@@ -22,6 +23,20 @@ class CategoriaProducto(str, Enum):
     electronica = "electronica"
     hogar = "hogar"
     juguetes = "juguetes"
+    
+class Libro(BaseModel):
+    titulo: str = Field(min_length=1, max_length=100)
+    autor: str = Field(min_length=2, max_length=50)
+    precio: float = Field(gt=0, le=9999)
+    genero: Genero          
+    disponible: bool = True
+    
+    @field_validator("titulo")
+    @classmethod
+    def titulo_sin_gratis(cls, valor):
+        if "gratis" in valor.lower():
+            raise ValueError("el título no puede contener la palabra 'gratis'")
+        return valor
 
 @app.get("/categorias/{categoria}")
 def get_categoria(categoria: Categoria):
@@ -41,3 +56,7 @@ def get_prueba2(producto_id: int, categoria: CategoriaProducto,
             "categoria": categoria,
             "en_oferta": en_oferta,
             "comentario": comentario}
+
+@app.post("/libros")
+def crear_libro(libro: Libro):
+    return libro
