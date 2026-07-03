@@ -125,7 +125,36 @@ class Empleado(BaseModel):
             return self
         if not (0 < self.salario_bonus < self.salario):
             raise ValueError("el salario bonus no puede ser 0 o mayor al salario ")
-        return self    
+        return self  
+    
+class Moneda(str, Enum):
+    eur = "eur"
+    usd = "usd"
+    gbp = "gbp"
+    
+class Transferencia(BaseModel):
+    cuenta_origen: str
+    cuenta_destino: str
+    monto: float = Field(gt=0, le=50000)
+    concepto: Optional[str] = Field(None, min_length=5, max_length=100)
+    moneda: Moneda
+    
+    @field_validator('cuenta_origen','cuenta_destino')
+    @classmethod
+    def limite_digitos(cls, valor):
+        if len(valor) != 10:
+            raise ValueError("La cuenta debe tener 10 digitos")
+        if not valor.isdigit():
+            raise ValueError("La cuenta debe tener solo numeros")
+        return valor
+    
+    @model_validator(mode="after")
+    def verificaciones(self):
+        if self.cuenta_origen == self.cuenta_destino:
+            raise ValueError("Las cuentas no pueden ser iguales")
+        if self.moneda in (Moneda.usd, Moneda.gbp) and self.monto > 10000:
+            raise ValueError("Esta divisa no puede ser mayor a 10000")
+        return self
     
 @app.get("/categorias/{categoria}")
 def get_categoria(categoria: Categoria):
@@ -154,6 +183,6 @@ def crear_libro(libro: Libro):
 def crear_pelicula(pelicula: Pelicula):
     return pelicula
 
-@app.post("/empleado")
-def crear_empleado(empleado: Empleado):
-    return empleado
+@app.post("/transferencia")
+def crear_tranferencia(transferencia: Transferencia):
+    return transferencia
