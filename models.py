@@ -9,3 +9,4 @@ class Libro(Base):
     autor = Column(String(50), nullable=False)
     precio = Column(Float, nullable=False)
     disponible = Column(Boolean, default=True)
+    año_publicacion = Column(Integer, nullable=True)

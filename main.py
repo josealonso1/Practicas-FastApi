@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 import models, schemas
 
-models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = SessionLocal()
