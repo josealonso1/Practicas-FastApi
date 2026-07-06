@@ -1,188 +1,62 @@
-from fastapi import FastAPI
-from enum import Enum
-from typing import Optional
-from pydantic import BaseModel, Field, field_validator, model_validator
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+import models, schemas
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"mensaje": "Hola FastAPI"}
-
-class Categoria(str, Enum):
-    ropa = "ropa"
-    comida = "comida"
-    tecnologia = "tecnologia"
-    
-class Genero(str, Enum):
-    ficcion = "ficcion"
-    no_ficcion = "no_ficcion"
-    poesia = "poesia"
-    
-class CategoriaProducto(str, Enum):
-    electronica = "electronica"
-    hogar = "hogar"
-    juguetes = "juguetes"
-    
-class Libro(BaseModel):
-    titulo: str = Field(min_length=1, max_length=100)
-    autor: str = Field(min_length=2, max_length=50)
-    precio: float = Field(gt=0, le=9999)
-    genero: Genero          
-    disponible: bool = True
-    
-    @field_validator("titulo")
-    @classmethod
-    def titulo_sin_gratis(cls, valor):
-        if "gratis" in valor.lower():
-            raise ValueError("el título no puede contener la palabra 'gratis'")
-        return valor
-    
-    @model_validator(mode="after")
-    def precio_coherente(self):
-        if self.disponible and self.precio > 500:
-            raise ValueError("libros disponibles no pueden costar más de 500")
-        return self
-    
-class Pelicula(BaseModel):
-    titulo: str = Field(min_length=2, max_length=100)
-    duracion_minutos: int = Field(gt=0, le=300)
-    director: str = Field(min_length=2)
-    estreno: int = Field(ge=1888, le=2026)
-    
-    @field_validator("titulo")
-    @classmethod
-    def titulo_rechaza_numeros(cls, valor):
-        if valor[0].isdigit():
-            raise ValueError("el titulo no puede empezar con un numero")
-        return valor
-    
-class PedidoOnline(BaseModel):
-    email: str = Field(min_length=5, max_length=50)
-    cantidad: int = Field(gt=0, le=100)
-    precio_unitario: float = Field(gt=0)
-    codigo_descuento: Optional[str] = None
-    
-    ###### verificacion de email #####
-    @field_validator("email")
-    @classmethod
-    def verificador_correos(cls, valor):
-        if "@" not in valor:
-            raise ValueError("el email debe tener @")
-        posicion = valor.split("@")
-        if "." not in posicion[-1]:
-            raise ValueError("Despues del @ debe tener un '.'")
-        return valor    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
         
-    @field_validator("codigo_descuento")
-    @classmethod
-    def verificador_descuentos(cls, valor):
-        if valor is None:
-            return valor
-        if not valor.startswith("DESC-"):
-            raise ValueError("Los codigos de descuento empiezan siempre con DESC-")
-        return valor
-        
-    @model_validator(mode="after")
-    def precio_coherente(self):
-        if self.cantidad > 50 and self.precio_unitario > 10.0:
-            raise ValueError("en compras con cantidades mayores a 50 el precio unitario no puede ser mayor a 10.0")
-        return self
-    
-class Departamento(str, Enum):
-    rrhh = "rrhh"
-    tecnologia = "tecnologia"
-    ventas = "ventas"
-    finanzas = "finanzas"
-    
-class Empleado(BaseModel):
-    nombre: str = Field(min_length=2, max_length=60)
-    edad: int = Field(ge=18, le=65)
-    salario: float = Field(gt=0)
-    departamento: Departamento
-    email_corporativo: str
-    salario_bonus: Optional[float] = None 
-    
-    @field_validator("nombre")
-    @classmethod
-    def verificacion_de_nombre(cls, valor):
-        if any(caracter.isdigit() for caracter in valor):
-            raise ValueError("El nombre no puede tener numeros")
-        return valor
-    
-    @field_validator("email_corporativo")
-    @classmethod
-    def verficacion_de_email(cls, valor):
-        if "@" not in valor:
-            raise ValueError("el email debe tener @")
-        if not valor.endswith("@empresa.com"):
-            raise ValueError("el email siempre debe acabar en @empresa.com")
-        return valor
-    
-    @model_validator(mode="after")
-    def bonus_coherente(self):
-        if self.salario_bonus is None:
-            return self
-        if not (0 < self.salario_bonus < self.salario):
-            raise ValueError("el salario bonus no puede ser 0 o mayor al salario ")
-        return self  
-    
-class Moneda(str, Enum):
-    eur = "eur"
-    usd = "usd"
-    gbp = "gbp"
-    
-class Transferencia(BaseModel):
-    cuenta_origen: str
-    cuenta_destino: str
-    monto: float = Field(gt=0, le=50000)
-    concepto: Optional[str] = Field(None, min_length=5, max_length=100)
-    moneda: Moneda
-    
-    @field_validator('cuenta_origen','cuenta_destino')
-    @classmethod
-    def limite_digitos(cls, valor):
-        if len(valor) != 10:
-            raise ValueError("La cuenta debe tener 10 digitos")
-        if not valor.isdigit():
-            raise ValueError("La cuenta debe tener solo numeros")
-        return valor
-    
-    @model_validator(mode="after")
-    def verificaciones(self):
-        if self.cuenta_origen == self.cuenta_destino:
-            raise ValueError("Las cuentas no pueden ser iguales")
-        if self.moneda in (Moneda.usd, Moneda.gbp) and self.monto > 10000:
-            raise ValueError("Esta divisa no puede ser mayor a 10000")
-        return self
-    
-@app.get("/categorias/{categoria}")
-def get_categoria(categoria: Categoria):
-    return {"categoria": categoria}
+@app.post("/libros", response_model=schemas.LibroResponse)
+def crear_libro(libro: schemas.LibroCreate, db: Session = Depends(get_db)):
+    db_libro = models.Libro(
+        titulo=libro.titulo,
+        autor=libro.autor,
+        precio=libro.precio,
+        disponible=libro.disponible
+    )
+    db.add(db_libro)
+    db.commit()
+    db.refresh(db_libro)
+    return db_libro
 
-@app.get("/books/{book_id}")
-def get_prueba(book_id: int, genre: Genero, available: bool=True, notes: Optional[str] = None):
-    return {"book_id": book_id, 
-            "genero" : genre, 
-            "available" : available, 
-            "notes" : notes}
-    
-@app.get('/productos/{producto_id}')
-def get_prueba2(producto_id: int, categoria: CategoriaProducto, 
-                en_oferta: Optional[bool]=False, comentario: Optional[str]=None):
-    return {"producto_id": producto_id,
-            "categoria": categoria,
-            "en_oferta": en_oferta,
-            "comentario": comentario}
+@app.get("/libros", response_model=list[schemas.LibroResponse])
+def obtener_libros(db: Session = Depends(get_db)):
+    libros = db.query(models.Libro).all()
+    return libros
 
-@app.post("/libros")
-def crear_libro(libro: Libro):
+@app.get("/libros/{libro_id}", response_model=schemas.LibroResponse)
+def obtener_libro(libro_id: int, db: Session = Depends(get_db)):
+    libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
     return libro
 
-@app.post("/pelicula")
-def crear_pelicula(pelicula: Pelicula):
-    return pelicula
+@app.delete("/libros/{libro_id}")
+def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
+    libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+    db.delete(libro)
+    db.commit()
+    return {"mensaje": "Libro eliminado correctamente"}
 
-@app.post("/transferencia")
-def crear_tranferencia(transferencia: Transferencia):
-    return transferencia
+@app.put("/libros/{libro_id}", response_model=schemas.LibroResponse)
+def actualizar_libro(libro_id: int, datos: schemas.LibroCreate, db: Session = Depends(get_db)):
+    libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
+    if libro is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+    libro.titulo = datos.titulo
+    libro.autor = datos.autor
+    libro.precio = datos.precio
+    libro.disponible = datos.disponible
+    db.commit()
+    db.refresh(libro)
+    return libro
