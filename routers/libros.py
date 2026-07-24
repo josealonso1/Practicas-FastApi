@@ -18,19 +18,19 @@ def crear_libro(libro: schemas.LibroCreate, db: Session = Depends(get_db)):
     db.refresh(db_libro)
     return db_libro
 
-@router.get("/libros", response_model=list[schemas.LibroResponse])
+@router.get("", response_model=list[schemas.LibroResponse])
 def obtener_libros(db: Session = Depends(get_db)):
     libros = db.query(models.Libro).all()
     return libros
 
-@router.get("/libros/{libro_id}", response_model=schemas.LibroResponse)
+@router.get("/{libro_id}", response_model=schemas.LibroResponse)
 def obtener_libro(libro_id: int, db: Session = Depends(get_db)):
     libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
     if libro is None:
         raise HTTPException(status_code=404, detail="Libro no encontrado")
     return libro
 
-@router.delete("/libros/{libro_id}")
+@router.delete("/{libro_id}")
 def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
     libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
     if libro is None:
@@ -39,7 +39,7 @@ def eliminar_libro(libro_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Libro eliminado correctamente"}
 
-@router.put("/libros/{libro_id}", response_model=schemas.LibroResponse)
+@router.put("/{libro_id}", response_model=schemas.LibroResponse)
 def actualizar_libro(libro_id: int, datos: schemas.LibroCreate, db: Session = Depends(get_db)):
     libro = db.query(models.Libro).filter(models.Libro.id == libro_id).first()
     if libro is None:

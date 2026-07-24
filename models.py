@@ -22,7 +22,7 @@ class Pelicula(Base):
     duracion_minutos = Column(Integer, nullable=False)
     activa = Column(Boolean, default=True)
     
-    reseñas = relationship("Reseñas", back_populates="pelicula")
+    reseñas = relationship("Reseña", back_populates="pelicula")
     
 class Reseña(Base):
     __tablename__ = "reseñas"
