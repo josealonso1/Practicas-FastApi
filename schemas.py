@@ -20,6 +20,20 @@ class LibroResponse(BaseModel):
     
     model_config = {"from_attributes": True}
     
+##### Reseñas ######    
+    
+class ReseñaCreate(BaseModel):
+    texto: str = Field(min_length=10, max_length=500)
+    puntuacion: int = Field(ge=1, le=10)
+    pelicula_id: int 
+
+class ReseñaResponse(BaseModel):
+    id: int
+    texto: str
+    puntuacion: int
+    pelicula_id: int
+    model_config = {"from_attributes": True}
+    
 ##### Pelicula #####
 
 class PeliculaCreate(BaseModel):
@@ -43,18 +57,7 @@ class PeliculaResponse(BaseModel):
     año: int
     duracion_minutos: int
     activa: bool
+    reseña: list[ReseñaResponse] = []
     
-    model_config = {"from_attributes": True}
-    
-class ReseñaCreate(BaseModel):
-    texto: str = Field(min_length=10, max_length=500)
-    puntuacion: int = Field(ge=1, le=10)
-    pelicula_id: int 
-
-class ReseñaResponse(BaseModel):
-    id: int
-    texto: str
-    puntuacion: int
-    pelicula_id: int
     model_config = {"from_attributes": True}
     
