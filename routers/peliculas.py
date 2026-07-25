@@ -53,3 +53,4 @@ def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaCreate, db: Session
     db.commit()
     db.refresh(pelicula)
     return pelicula    
+

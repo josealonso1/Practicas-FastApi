@@ -1,37 +1,23 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-##### Libros #####
-
-class LibroCreate(BaseModel):
-    titulo: str = Field(min_length=1, max_length=100)
-    autor: str = Field(min_length=1, max_length=50)
-    precio: float = Field(gt=0)
-    disponible: bool = True
-    año_publicacion: Optional[int] = None
-
-class LibroResponse(BaseModel):
-    id: int
-    titulo: str
-    autor: str
-    precio: float
-    disponible: bool
-    año_publicacion: Optional[int] = None
-    
-    model_config = {"from_attributes": True}
-    
 ##### Reseñas ######    
     
 class ReseñaCreate(BaseModel):
     texto: str = Field(min_length=10, max_length=500)
     puntuacion: int = Field(ge=1, le=10)
-
+    
+class ReseñaUpdate(BaseModel):
+    texto: Optional[str] = Field(None, min_length=10, max_length=500)
+    puntuacion: Optional[int] = Field(None, ge=1, le=10)
+    
 class ReseñaResponse(BaseModel):
     id: int
     texto: str
     puntuacion: int
     pelicula_id: int
     model_config = {"from_attributes": True}
+    
     
 ##### Pelicula #####
 

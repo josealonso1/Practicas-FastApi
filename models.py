@@ -1,16 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from database import Base
 from sqlalchemy.orm import relationship
-
-class Libro(Base):
-    __tablename__ = "libros"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    titulo = Column(String(100), nullable=False)
-    autor = Column(String(50), nullable=False)
-    precio = Column(Float, nullable=False)
-    disponible = Column(Boolean, default=True)
-    año_publicacion = Column(Integer, nullable=True)
     
 class Pelicula(Base):
     __tablename__ = "peliculas"
@@ -25,7 +15,8 @@ class Pelicula(Base):
     reseñas = relationship("Reseña", back_populates="pelicula")
     
 class Reseña(Base):
-    __tablename__ = "reseñas"
+    __tablename__ = "reseña"
+    
     id = Column(Integer, primary_key=True, index=True)
     texto = Column(String(500), nullable=False)
     puntuacion = Column(Integer, nullable=False)
