@@ -40,16 +40,16 @@ def eliminar_pelicula(pelicula_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Pelicula eliminado correctamente"}
 
-@router.put("/{pelicula_id}", response_model=schemas.PeliculaResponse)
-def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaCreate, db: Session = Depends(get_db)):
+@router.patch("/{pelicula_id}", response_model=schemas.PeliculaResponse)
+def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaUpdate, db: Session = Depends(get_db)):
     pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
     if pelicula is None:
         raise HTTPException(status_code=404, detail="Pelicula no encontrada")
-    pelicula.titulo = datos.titulo
-    pelicula.director = datos.director
-    pelicula.año = datos.año
-    pelicula.duracion_minutos = datos.duracion_minutos
-    pelicula.activa = datos.activa
+    
+    datos_actualizados = datos.model_dump(exclude_unset=True)
+    for campo, valor in datos_actualizados.items():
+        setattr(pelicula, campo, valor)
+    
     db.commit()
     db.refresh(pelicula)
     return pelicula    
