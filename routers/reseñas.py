@@ -21,7 +21,7 @@ def obtener_reseña_pelicula(pelicula_id: int, db:Session = Depends(get_db)):
     
 @router.get("/{id}", response_model=schemas.ReseñaResponse)
 def obtener_reseña(id: int, db:Session = Depends(get_db)):
-    reseña = db.query(models.Reseña).all().filter(models.Reseña.id == id).first()
+    reseña = db.query(models.Reseña).filter(models.Reseña.id == id).first()
     
     if reseña is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
