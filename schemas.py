@@ -31,12 +31,19 @@ class ActorUpdate(BaseModel):
     apellido: Optional[str] = Field(None, min_length=1, max_length=50)
     pais: Optional[str] = Field(None, min_length=2, max_length=20)
     
+class ActorSimple(BaseModel):
+    id: int
+    nombre: str
+    apellido: str
+    pais: str
+    model_config = {"from_attributes": True}    
+
 class ActorResponse(BaseModel):
     id: int
     nombre: str
     apellido: str
     pais: str
-    peliculas: list["PeliculaResponse"] = []
+    peliculas: list["PeliculaSimple"] = []
     
     model_config = {"from_attributes": True}
     
@@ -56,6 +63,15 @@ class PeliculaUpdate(BaseModel):
     año: Optional[int] = Field(None, ge=1895, le=2026)
     duracion_minutos: Optional[int] = Field(None, gt=0 ,le=600)
     activa: Optional[bool] = None
+    
+class PeliculaSimple(BaseModel):
+    id: int
+    titulo: str
+    director: str
+    año: int
+    duracion_minutos: int
+    activa: bool
+    model_config = {"from_attributes": True}    
 
 class PeliculaResponse(BaseModel):
     id: int
@@ -65,7 +81,7 @@ class PeliculaResponse(BaseModel):
     duracion_minutos: int
     activa: bool
     reseñas: list[ReseñaResponse] = []
-    actores: list[ActorResponse] = []
+    actores: list[ActorSimple] = []
     model_config = {"from_attributes": True}
     
 ActorResponse.model_rebuild()

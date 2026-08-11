@@ -54,3 +54,34 @@ def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaUpdate, db: Session
     db.refresh(pelicula)
     return pelicula    
 
+@router.post("/{pelicula_id}/actores/{actor_id}", response_model=schemas.PeliculaResponse)
+def agregar_actor_a_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db)):
+    pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
+    if pelicula is None:
+        raise HTTPException(status_code=404, detail="Película no encontrada")
+    
+    actor = db.query(models.Actor).filter(models.Actor.id == actor_id).first()
+    if actor is None:
+        raise HTTPException(status_code=404, detail="Actor no encontrado")
+    
+    if actor in pelicula.actores:
+        raise HTTPException(status_code=400, detail="El actor ya está asociado a esta película")
+    
+    pelicula.actores.append(actor)
+    db.commit()
+    db.refresh(pelicula)
+    return pelicula
+
+@router.delete("/{pelicula_id}/actores/{actor_id}")
+def quitar_actor_de_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db)):
+    pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
+    if pelicula is None:
+        raise HTTPException(status_code=404, detail="Película no encontrada")
+    
+    actor = db.query(models.Actor).filter(models.Actor.id == actor_id).first()
+    if actor is None or actor not in pelicula.actores:
+        raise HTTPException(status_code=404, detail="El actor no está asociado a esta película")
+    
+    pelicula.actores.remove(actor)
+    db.commit()
+    return {"mensaje": "Actor removido de la película correctamente"}
