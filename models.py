@@ -1,6 +1,13 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Table
 from database import Base
 from sqlalchemy.orm import relationship
+
+pelicula_actor = Table(
+    "pelicula_actor",
+    Base.metadata,          
+    Column("pelicula_id", Integer, ForeignKey("peliculas.id")),
+    Column("actor_id", Integer, ForeignKey("actores.id"))
+)
     
 class Pelicula(Base):
     __tablename__ = "peliculas"
@@ -13,9 +20,10 @@ class Pelicula(Base):
     activa = Column(Boolean, default=True)
     
     reseñas = relationship("Reseña", back_populates="pelicula")
+    actores = relationship("Actor", secondary=pelicula_actor, back_populates="peliculas")
     
 class Reseña(Base):
-    __tablename__ = "reseña"
+    __tablename__ = "reseñas"
     
     id = Column(Integer, primary_key=True, index=True)
     texto = Column(String(500), nullable=False)
@@ -24,3 +32,13 @@ class Reseña(Base):
     pelicula_id = Column(Integer, ForeignKey("peliculas.id"), nullable=False)
     
     pelicula = relationship("Pelicula", back_populates="reseñas")
+    
+class Actor(Base):
+    __tablename__ = "actores"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(50), nullable=False)
+    apellido = Column(String(50), nullable=False)
+    pais = Column(String(20), nullable=False)
+    
+    peliculas = relationship("Pelicula", secondary=pelicula_actor, back_populates="actores")

@@ -18,6 +18,28 @@ class ReseñaResponse(BaseModel):
     pelicula_id: int
     model_config = {"from_attributes": True}
     
+
+##### Actores #####
+
+class ActorCreate(BaseModel):
+    nombre: str = Field(min_length=1, max_length=50)
+    apellido: str = Field(min_length=1, max_length=50)
+    pais: str = Field(min_length=2, max_length=20)
+    
+class ActorUpdate(BaseModel):
+    nombre: Optional[str] = Field(None, min_length=1, max_length=50)
+    apellido: Optional[str] = Field(None, min_length=1, max_length=50)
+    pais: Optional[str] = Field(None, min_length=2, max_length=20)
+    
+class ActorResponse(BaseModel):
+    id: int
+    nombre: str
+    apellido: str
+    pais: str
+    peliculas: list["PeliculaResponse"] = []
+    
+    model_config = {"from_attributes": True}
+    
     
 ##### Pelicula #####
 
@@ -42,6 +64,8 @@ class PeliculaResponse(BaseModel):
     año: int
     duracion_minutos: int
     activa: bool
-    reseñas: list[ReseñaResponse] = []    
+    reseñas: list[ReseñaResponse] = []
+    actores: list[ActorResponse] = []
     model_config = {"from_attributes": True}
     
+ActorResponse.model_rebuild()
