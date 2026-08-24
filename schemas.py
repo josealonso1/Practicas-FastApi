@@ -1,6 +1,28 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+##### usuario ######
+
+class UsuarioCreate(BaseModel):
+    username: str = Field(min_length=5, max_length=20)
+    email: str = Field(min_length=5, max_length=100)
+    password: str = Field(min_length=8, max_length=30)
+    activo: bool = True
+
+class UsuarioResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    activo: bool
+    model_config = {"from_attributes": True}
+    
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+class TokenData(BaseModel):
+    username: Optional[str] = None      
+    
 ##### Reseñas ######    
     
 class ReseñaCreate(BaseModel):
