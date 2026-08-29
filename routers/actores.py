@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-import models, schemas
+import models, schemas, auth
 
 router = APIRouter(prefix="/actores")
 
 @router.post("", response_model=schemas.ActorResponse)
-def crear_actores(actor: schemas.ActorCreate, db: Session = Depends(get_db)):
+def crear_actores(actor: schemas.ActorCreate, db: Session = Depends(get_db),
+                  usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     db_actor = models.Actor(
         nombre = actor.nombre,
         apellido = actor.apellido,
@@ -31,7 +32,8 @@ def obtener_actor(actor_id: int, db: Session = Depends(get_db)):
     return actor
 
 @router.patch("/{actor_id}", response_model=schemas.ActorResponse)
-def actualizar_actor(actor_id: int, datos: schemas.ActorUpdate, db: Session = Depends(get_db)):
+def actualizar_actor(actor_id: int, datos: schemas.ActorUpdate, db: Session = Depends(get_db),
+                     usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     actor = db.query(models.Actor).filter(models.Actor.id == actor_id).first()
     if actor is None:
         raise HTTPException(status_code=404, detail="Actor no encontrada")
@@ -45,7 +47,8 @@ def actualizar_actor(actor_id: int, datos: schemas.ActorUpdate, db: Session = De
     return actor
 
 @router.delete("/{actor_id}")
-def eliminar_actor(actor_id: int, db: Session = Depends(get_db)):
+def eliminar_actor(actor_id: int, db: Session = Depends(get_db),
+                   usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     actor = db.query(models.Actor).filter(models.Actor.id == actor_id).first()
     if actor is None:
         raise HTTPException(status_code=404, detail="Actor no encontrado")

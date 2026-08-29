@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-import models, schemas
+import models, schemas, auth
 
 router = APIRouter(prefix="/peliculas")
 
 @router.post("", response_model=schemas.PeliculaResponse)
-def crear_peliculas(pelicula: schemas.PeliculaCreate, db: Session = Depends(get_db)):
+def crear_peliculas(pelicula: schemas.PeliculaCreate,
+                    db: Session = Depends(get_db),
+                    usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     db_pelicula = models.Pelicula(
         titulo = pelicula.titulo,
         director = pelicula.director,
@@ -32,7 +34,8 @@ def obtener_pelicula(pelicula_id: int, db: Session = Depends(get_db)):
     return pelicula
 
 @router.delete("/{pelicula_id}")
-def eliminar_pelicula(pelicula_id: int, db: Session = Depends(get_db)):
+def eliminar_pelicula(pelicula_id: int, db: Session = Depends(get_db),
+                      usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
     if pelicula is None:
         raise HTTPException(status_code=404, detail="Pelicula no encontrada")
@@ -41,7 +44,8 @@ def eliminar_pelicula(pelicula_id: int, db: Session = Depends(get_db)):
     return {"mensaje": "Pelicula eliminado correctamente"}
 
 @router.patch("/{pelicula_id}", response_model=schemas.PeliculaResponse)
-def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaUpdate, db: Session = Depends(get_db)):
+def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaUpdate, db: Session = Depends(get_db),
+                    usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
     if pelicula is None:
         raise HTTPException(status_code=404, detail="Pelicula no encontrada")
@@ -55,7 +59,8 @@ def editar_pelicula(pelicula_id: int, datos: schemas.PeliculaUpdate, db: Session
     return pelicula    
 
 @router.post("/{pelicula_id}/actores/{actor_id}", response_model=schemas.PeliculaResponse)
-def agregar_actor_a_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db)):
+def agregar_actor_a_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db),
+                             usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
     if pelicula is None:
         raise HTTPException(status_code=404, detail="Película no encontrada")
@@ -73,7 +78,8 @@ def agregar_actor_a_pelicula(pelicula_id: int, actor_id: int, db: Session = Depe
     return pelicula
 
 @router.delete("/{pelicula_id}/actores/{actor_id}")
-def quitar_actor_de_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db)):
+def quitar_actor_de_pelicula(pelicula_id: int, actor_id: int, db: Session = Depends(get_db),
+                             usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     pelicula = db.query(models.Pelicula).filter(models.Pelicula.id == pelicula_id).first()
     if pelicula is None:
         raise HTTPException(status_code=404, detail="Película no encontrada")
