@@ -1,7 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from database import SessionLocal, engine
-import models, schemas
+from fastapi import FastAPI
+from database import engine
+import models
 from routers import peliculas, reseñas, actores, usuario
 
 

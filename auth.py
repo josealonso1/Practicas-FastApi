@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jwt.exceptions import InvalidTokenError
 from database import get_db
-import models, schemas
+import models
 
 
 load_dotenv()

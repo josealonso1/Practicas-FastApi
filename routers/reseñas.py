@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models, schemas, auth
 
-router = APIRouter(prefix="/resehas")
+router = APIRouter(prefix="/resenhas")
 
 
 @router.get("", response_model=list[schemas.ReseñaResponse])
@@ -19,20 +19,20 @@ def obtener_reseña_pelicula(pelicula_id: int, db:Session = Depends(get_db)):
     
     return pelicula.reseñas
     
-@router.get("/{id}", response_model=schemas.ReseñaResponse)
-def obtener_reseña(id: int, db:Session = Depends(get_db)):
-    reseña = db.query(models.Reseña).filter(models.Reseña.id == id).first()
+@router.get("/{resenha_id}", response_model=schemas.ReseñaResponse)
+def obtener_reseña(resenha_id: int, db:Session = Depends(get_db)):
+    reseña = db.query(models.Reseña).filter(models.Reseña.id == resenha_id).first()
     
     if reseña is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
     return reseña
 
-@router.post("/pelicula/{id}" ,response_model=schemas.ReseñaResponse)
-def crear_reseña(id: int, reseña: schemas.ReseñaCreate,
+@router.post("/pelicula/{pelicula_id}" ,response_model=schemas.ReseñaResponse)
+def crear_reseña(pelicula_id: int, reseña: schemas.ReseñaCreate,
                  db:Session = Depends(get_db),
                  usuario_actual: models.Usuario = Depends(auth.get_current_user)):
     pelicula = db.query(models.Pelicula).filter(
-        models.Pelicula.id == id
+        models.Pelicula.id == pelicula_id
     ).first()
     
     if pelicula is None:
@@ -41,7 +41,7 @@ def crear_reseña(id: int, reseña: schemas.ReseñaCreate,
     db_reseña = models.Reseña(
         texto = reseña.texto,
         puntuacion = reseña.puntuacion,
-        pelicula_id = id
+        pelicula_id = pelicula_id
     )
     
     db.add(db_reseña)
@@ -49,10 +49,10 @@ def crear_reseña(id: int, reseña: schemas.ReseñaCreate,
     db.refresh(db_reseña)
     return db_reseña
 
-@router.delete("/{id}")
-def eliminar_reseña(id: int, db:Session = Depends(get_db),
+@router.delete("/{resenha_id}")
+def eliminar_reseña(resenha_id: int, db:Session = Depends(get_db),
                     usuario_actual: models.Usuario = Depends(auth.get_current_user)):
-    reseña = db.query(models.Reseña).filter(models.Reseña.id == id).first()
+    reseña = db.query(models.Reseña).filter(models.Reseña.id == resenha_id).first()
     
     if reseña is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
@@ -62,10 +62,10 @@ def eliminar_reseña(id: int, db:Session = Depends(get_db),
     
     return {"mensaje": "Reseña eliminada correctamente"}
 
-@router.patch("/{id}", response_model=schemas.ReseñaResponse)
-def editar_reseña(id: int, datos: schemas.ReseñaUpdate, db:Session = Depends(get_db),
+@router.patch("/{resenha_id}", response_model=schemas.ReseñaResponse)
+def editar_reseña(resenha_id: int, datos: schemas.ReseñaUpdate, db:Session = Depends(get_db),
                   usuario_actual: models.Usuario = Depends(auth.get_current_user)):
-    reseña = db.query(models.Reseña).filter(models.Reseña.id == id).first()
+    reseña = db.query(models.Reseña).filter(models.Reseña.id == resenha_id).first()
     if reseña is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada")
     
